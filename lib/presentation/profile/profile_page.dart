@@ -1,3 +1,5 @@
+import 'package:event_buddy/models/all_events_response.dart';
+import 'package:event_buddy/models/user_response_model.dart';
 import 'package:event_buddy/network/locator.dart';
 import 'package:event_buddy/presentation/login/login_page.dart';
 import 'package:event_buddy/presentation/profile/cubit/profile_cubit.dart';
@@ -29,6 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             } else if (state is ProfileSuccess) {
               final user = state.user.user!;
+              final appliedEvents = state.user.user!.appliedJobs;
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -102,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             children: [
                               _textWithIcon("${user.email}", Icons.email),
-                              _textWithIcon("${user.phone}", Icons.phone),
+                              // _textWithIcon("${user.phone}", Icons.phone),
                               _textWithIcon("Male", Icons.male),
                             ],
                           ),
@@ -112,22 +115,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(
                       height: 20,
                     ),
-                    // Column(
-                    //   children: [
-                    //     _titleWithBgColor("Change Password"),
-                    //     Padding(
-                    //       padding: const EdgeInsets.only(
-                    //         left: 8.0,
-                    //         bottom: 5,
-                    //       ),
-                    //       child: Column(
-                    //         children: [
-                    //           _textWithIcon("Change Password", Icons.password),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
+                    Column(
+                      children: [
+                        _titleWithBgColor("Applied Events"),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 8.0,
+                            bottom: 5,
+                          ),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              final event = appliedEvents![index];
+                              return _buildAppliedEventCard(event);
+                            },
+                            itemCount: appliedEvents == null
+                                ? 0
+                                : appliedEvents.length,
+                          ),
+                        ),
+                      ],
+                    ),
                     ElevatedButton.icon(
                       onPressed: () {
                         kPref.clear();
@@ -190,5 +199,37 @@ Widget _textWithIcon(String title, IconData icon) => Padding(
             ),
           ),
         ],
+      ),
+    );
+
+Widget _buildAppliedEventCard(AppliedJob event) => Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Card(
+        elevation: 3,
+        child: ListTile(
+          title: Text(
+            "Event ID: ${event.job}",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Applied Date: ${event.appliedDate}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              Text(
+                "Status: ${event.status}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );

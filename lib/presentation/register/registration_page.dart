@@ -20,20 +20,11 @@ class _LoginWidgetState extends State<RegisterWidget> {
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _interestsController = TextEditingController();
   final TextEditingController _repeatPasswordController =
       TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String? _selectedUserRole;
-
-  Future register(
-    String name,
-    email,
-    role,
-    phone,
-    password,
-  ) async {
-    context.read<RegisterCubit>().register(name, role, phone, email, password);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +114,7 @@ class _LoginWidgetState extends State<RegisterWidget> {
                               },
                               items: const [
                                 DropdownMenuItem(
-                                  value: 'company',
+                                  value: 'Company',
                                   child: Text('Event Manager'),
                                 ),
                                 DropdownMenuItem(
@@ -196,6 +187,21 @@ class _LoginWidgetState extends State<RegisterWidget> {
                             const SizedBox(
                               height: 11,
                             ),
+                            if (_selectedUserRole != "Company")
+                              _buildTextFormField(
+                                _interestsController,
+                                "Interests (use comma(,) to separate)",
+                                (txt) {
+                                  if (txt == null || txt.isEmpty) {
+                                    return "Interest is Required";
+                                  }
+                                  return null;
+                                },
+                                null,
+                              ),
+                            const SizedBox(
+                              height: 11,
+                            ),
                             _buildTextFormField(
                               _newPasswordController,
                               "New Password",
@@ -240,13 +246,25 @@ class _LoginWidgetState extends State<RegisterWidget> {
                 InkWell(
                   onTap: () {
                     if (_formKey.currentState!.validate()) {
-                      register(
-                        _nameController.text,
-                        _emailController.text,
-                        _selectedUserRole,
-                        _mobileNumberController.text.toString(),
-                        _repeatPasswordController.text.toString(),
-                      );
+                      final interest = _interestsController.text;
+                      var values = interest
+                          .split(",")
+                          .map((x) => x.trim())
+                          .where((element) => element.isNotEmpty)
+                          .toList();
+                      var data = {
+                        "username": _nameController.text,
+                        "type": _selectedUserRole,
+                        "phone": _mobileNumberController.text,
+                        "email": _emailController.text,
+                        "skills": values,
+                        "password": _repeatPasswordController.text,
+                      };
+                      if (_selectedUserRole == "Company") {
+                        data["cname"] = _nameController.text;
+                      }
+
+                      context.read<RegisterCubit>().register(data);
                     }
                   },
                   child: Container(

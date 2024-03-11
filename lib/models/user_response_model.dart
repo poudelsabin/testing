@@ -1,3 +1,7 @@
+// To parse this JSON data, do
+//
+//     final userResponse = userResponseFromJson(jsonString);
+
 import 'dart:convert';
 
 UserResponse userResponseFromJson(String str) =>
@@ -8,24 +12,71 @@ String userResponseToJson(UserResponse data) => json.encode(data.toJson());
 class UserResponse {
   bool? status;
   User? user;
+  Company? company;
   String? token;
 
   UserResponse({
     this.status,
     this.user,
+    this.company,
     this.token,
   });
 
   factory UserResponse.fromJson(Map<String, dynamic> json) => UserResponse(
         status: json["status"],
         user: json["user"] == null ? null : User.fromJson(json["user"]),
+        company:
+            json["company"] == null ? null : Company.fromJson(json["company"]),
         token: json["token"],
       );
 
   Map<String, dynamic> toJson() => {
         "status": status,
         "user": user?.toJson(),
+        "company": company?.toJson(),
         "token": token,
+      };
+}
+
+class Company {
+  String? id;
+  String? name;
+  bool? isAvatarImageSet;
+  String? avatarImage;
+  bool? isVerified;
+  List<String>? jobs;
+  int? v;
+
+  Company({
+    this.id,
+    this.name,
+    this.isAvatarImageSet,
+    this.avatarImage,
+    this.isVerified,
+    this.jobs,
+    this.v,
+  });
+
+  factory Company.fromJson(Map<String, dynamic> json) => Company(
+        id: json["_id"],
+        name: json["name"],
+        isAvatarImageSet: json["isAvatarImageSet"],
+        avatarImage: json["avatarImage"],
+        isVerified: json["isVerified"],
+        jobs: json["jobs"] == null
+            ? []
+            : List<String>.from(json["jobs"]!.map((x) => x)),
+        v: json["__v"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "_id": id,
+        "name": name,
+        "isAvatarImageSet": isAvatarImageSet,
+        "avatarImage": avatarImage,
+        "isVerified": isVerified,
+        "jobs": jobs == null ? [] : List<dynamic>.from(jobs!.map((x) => x)),
+        "__v": v,
       };
 }
 
@@ -40,14 +91,12 @@ class User {
   String? avatarImage;
   bool? isVerified;
   List<Additional>? additional;
-  List<dynamic>? appliedJobs;
+  List<AppliedJob>? appliedJobs;
   List<dynamic>? savedJobs;
   List<dynamic>? events;
   List<dynamic>? todos;
   int? v;
-  String? firstName;
-  String? lastName;
-  String? phone;
+  String? company;
 
   User({
     this.professional,
@@ -65,9 +114,7 @@ class User {
     this.events,
     this.todos,
     this.v,
-    this.firstName,
-    this.lastName,
-    this.phone,
+    this.company,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -88,7 +135,8 @@ class User {
                 json["additional"]!.map((x) => Additional.fromJson(x))),
         appliedJobs: json["appliedJobs"] == null
             ? []
-            : List<dynamic>.from(json["appliedJobs"]!.map((x) => x)),
+            : List<AppliedJob>.from(
+                json["appliedJobs"]!.map((x) => AppliedJob.fromJson(x))),
         savedJobs: json["savedJobs"] == null
             ? []
             : List<dynamic>.from(json["savedJobs"]!.map((x) => x)),
@@ -99,9 +147,7 @@ class User {
             ? []
             : List<dynamic>.from(json["todos"]!.map((x) => x)),
         v: json["__v"],
-        firstName: json["firstName"],
-        lastName: json["lastName"],
-        phone: json["phone"],
+        company: json["company"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -119,7 +165,7 @@ class User {
             : List<dynamic>.from(additional!.map((x) => x.toJson())),
         "appliedJobs": appliedJobs == null
             ? []
-            : List<dynamic>.from(appliedJobs!.map((x) => x)),
+            : List<dynamic>.from(appliedJobs!.map((x) => x.toJson())),
         "savedJobs": savedJobs == null
             ? []
             : List<dynamic>.from(savedJobs!.map((x) => x)),
@@ -127,9 +173,7 @@ class User {
             events == null ? [] : List<dynamic>.from(events!.map((x) => x)),
         "todos": todos == null ? [] : List<dynamic>.from(todos!.map((x) => x)),
         "__v": v,
-        "firstName": firstName,
-        "lastName": lastName,
-        "phone": phone,
+        "company": company,
       };
 }
 
@@ -157,33 +201,51 @@ class Additional {
       };
 }
 
-class Professional {
-  String? title;
-  String? sector;
-  List<String>? skills;
-  String? summary;
+class AppliedJob {
+  String? job;
+  DateTime? appliedDate;
+  String? status;
+  String? id;
 
-  Professional({
-    this.title,
-    this.sector,
-    this.skills,
-    this.summary,
+  AppliedJob({
+    this.job,
+    this.appliedDate,
+    this.status,
+    this.id,
   });
 
-  factory Professional.fromJson(Map<String, dynamic> json) => Professional(
-        title: json["title"],
-        sector: json["sector"],
-        skills: json["skills"] == null
-            ? []
-            : List<String>.from(json["skills"]!.map((x) => x)),
-        summary: json["summary"],
+  factory AppliedJob.fromJson(Map<String, dynamic> json) => AppliedJob(
+        job: json["job"],
+        appliedDate: json["appliedDate"] == null
+            ? null
+            : DateTime.parse(json["appliedDate"]),
+        status: json["status"],
+        id: json["_id"],
       );
 
   Map<String, dynamic> toJson() => {
-        "title": title,
-        "sector": sector,
+        "job": job,
+        "appliedDate": appliedDate?.toIso8601String(),
+        "status": status,
+        "_id": id,
+      };
+}
+
+class Professional {
+  List<dynamic>? skills;
+
+  Professional({
+    this.skills,
+  });
+
+  factory Professional.fromJson(Map<String, dynamic> json) => Professional(
+        skills: json["skills"] == null
+            ? []
+            : List<dynamic>.from(json["skills"]!.map((x) => x)),
+      );
+
+  Map<String, dynamic> toJson() => {
         "skills":
             skills == null ? [] : List<dynamic>.from(skills!.map((x) => x)),
-        "summary": summary,
       };
 }

@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:event_buddy/models/event_model.dart';
+import 'package:event_buddy/models/all_events_response.dart';
 import 'package:event_buddy/models/user_response_model.dart';
 import 'package:event_buddy/network/locator.dart';
-import 'package:event_buddy/presentation/add_event_page.dart';
+import 'package:event_buddy/presentation/add_event/add_event_page.dart';
+import 'package:event_buddy/presentation/cubit/all_event_cubit.dart';
 import 'package:event_buddy/presentation/event_form.dart';
-import 'package:event_buddy/utils/resources/events_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isAdmin = false;
+  String companyId = "";
 
   @override
   void initState() {
@@ -27,8 +29,11 @@ class _HomePageState extends State<HomePage> {
   loadUser() async {
     var userData = await kPref.getUser();
     log(userData!);
-    var user = UserResponse.fromJson(json.decode(userData!));
-    isAdmin = user.user!.type == "company";
+    var user = UserResponse.fromJson(json.decode(userData));
+    isAdmin = user.user!.type == "Company";
+    if (user.company != null) {
+      companyId = "${user.company!.id}";
+    }
     setState(() {});
   }
 
@@ -56,7 +61,8 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AddEventPage(),
+                          builder: (context) =>
+                              AddEventPage(companyID: companyId),
                         ),
                       );
                     },
@@ -70,17 +76,31 @@ class _HomePageState extends State<HomePage> {
         automaticallyImplyLeading: false,
         title: const Text('Events'),
       ),
-      body: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        child: ListView.separated(
-          separatorBuilder: (context, index) {
-            return const SizedBox(height: 8);
-          },
-          itemBuilder: (context, index) {
-            return EventCard(event: kEvents[index]);
-          },
-          itemCount: kEvents.length,
-        ),
+      body: BlocBuilder<AllEventCubit, AllEventState>(
+        builder: (context, state) {
+          if (state is AllEventLoading) {
+            return const Center(child: CircularProgressIndicator.adaptive());
+          } else if (state is AllEventFailure) {
+            return Center(child: Text(state.msg));
+          } else if (state is AllEventSuccess) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: ListView.separated(
+                  separatorBuilder: (context, index) {
+                    return const SizedBox(height: 8);
+                  },
+                  itemBuilder: (context, index) {
+                    var events = state.data.data;
+                    return EventCard(event: events![index]);
+                  },
+                  itemCount: state.data.data == null || state.data.data!.isEmpty
+                      ? 0
+                      : state.data.data!.length),
+            );
+          } else {
+            return const SizedBox.shrink();
+          }
+        },
       ),
     );
   }
@@ -97,34 +117,40 @@ class EventCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EventForm(
-              event: event,
-            ),
+            builder: (context) => EventForm(event: event),
           ),
         );
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 12.0),
         child: Card(
-          color: Colors.grey,
+          color: Colors.white,
           child: Column(
             children: [
               Text(
-                event.title,
-                style: Theme.of(context).textTheme.headlineMedium,
+                event.title.toString(),
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-              Image.network(event.bannerImage),
+              // Image.network(event.bannerImage),
               Text(
-                event.description,
+                event.description.toString(),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
+              const SizedBox(height: 40),
               Text(
-                event.openingDate,
-                style: Theme.of(context).textTheme.bodyLarge,
+                "Open Date: ${event.openDate}",
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge!
+                    .copyWith(color: Colors.green),
               ),
               Text(
-                event.closingDate,
-                style: Theme.of(context).textTheme.bodyLarge,
+                "Close Date: ${event.closeDate}",
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Colors.red,
+                    ),
               ),
             ],
           ),

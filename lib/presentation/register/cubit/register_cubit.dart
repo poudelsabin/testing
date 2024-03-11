@@ -11,16 +11,10 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   final Repository _repository = Repository(kClient);
 
-  void register(String name, role, phone, email, password) async {
+  void register(Map<String, dynamic> data) async {
     emit(RegisterLoading());
     try {
-      final UserResponse user = await _repository.register({
-        "username": name,
-        "type": role,
-        "phone": phone,
-        "email": email,
-        "password": password,
-      });
+      final UserResponse user = await _repository.register(data);
       if (user.status!) {
         emit(RegisterSuccess("Successfully registered"));
       } else {

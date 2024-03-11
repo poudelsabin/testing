@@ -1,6 +1,9 @@
-import 'package:event_buddy/models/event_model.dart';
-import 'package:event_buddy/utils/constants/color_constants.dart';
+import 'package:event_buddy/models/all_events_response.dart';
+import 'package:event_buddy/presentation/apply_event/cubit/apply_event_cubit.dart';
+import 'package:event_buddy/utils/loading_dialog.dart';
+import 'package:event_buddy/utils/popup_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EventForm extends StatefulWidget {
   const EventForm({super.key, required this.event});
@@ -16,181 +19,113 @@ class _EventFormState extends State<EventForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.event.title),
+        title: Text(widget.event.title!),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Image.network(widget.event.bannerImage),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Please Enter Your Detail",
-                  style: Theme.of(context).textTheme.headlineMedium,
+          child: BlocListener<ApplyEventCubit, ApplyEventState>(
+            listener: (context, state) {
+              if (state is ApplyEventLoading) {
+                buildLoadingDialog(context: context);
+              }
+              if (state is ApplyEventFailure) {
+                Navigator.of(context, rootNavigator: true).pop();
+                PopUpProvider.showSnackBarMessage(context, state.msg,
+                    isError: true);
+              }
+              if (state is ApplyEventSuccess) {
+                Navigator.of(context, rootNavigator: true).pop();
+                PopUpProvider.showSnackBarMessage(context, state.msg,
+                    isError: false);
+              }
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image.network(widget.event.bannerImage),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    widget.event.title!,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              TextFormField(
-                obscureText: true,
-                style: TextStyle(
-                  color: ColorConstants.blackColor, // Set the text color here
+                // const SizedBox(height: ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildDetailedWidget(
+                        context,
+                        "Description: ",
+                        widget.event.description!,
+                      ),
+                      buildDetailedWidget(
+                        context,
+                        "About: ",
+                        widget.event.about!,
+                      ),
+                      buildDetailedWidget(
+                        context,
+                        "Interests: ",
+                        "${widget.event.skills!}",
+                      ),
+                      buildDetailedWidget(
+                        context,
+                        "Open Date: ",
+                        "${widget.event.openDate!}",
+                      ),
+                      buildDetailedWidget(
+                        context,
+                        "Close Date: ",
+                        "${widget.event.closeDate!}",
+                      ),
+                    ],
+                  ),
                 ),
-                cursorColor: ColorConstants.blackColor,
-                // controller: _newPasswordController,
-                keyboardType: TextInputType.name,
-                decoration: InputDecoration(
-                  fillColor: ColorConstants.blackColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
+
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context
+                          .read<ApplyEventCubit>()
+                          .applyEvent(widget.event.id!);
+                    },
+                    child: const Text("Apply"),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  hintText: 'Name',
-                  hintStyle: TextStyle(
-                      fontSize: 14.0,
-                      height: 1,
-                      color: ColorConstants.hintColor),
-                  focusColor: ColorConstants.blackColor,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Name is Required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-              TextFormField(
-                obscureText: true,
-                style: TextStyle(
-                  color: ColorConstants.blackColor, // Set the text color here
-                ),
-                cursorColor: ColorConstants.blackColor,
-                // controller: _newPasswordController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  fillColor: ColorConstants.blackColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  hintText: 'Email',
-                  hintStyle: TextStyle(
-                      fontSize: 14.0,
-                      height: 1,
-                      color: ColorConstants.hintColor),
-                  focusColor: ColorConstants.blackColor,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-              TextFormField(
-                obscureText: true,
-                style: TextStyle(
-                  color: ColorConstants.blackColor, // Set the text color here
-                ),
-                cursorColor: ColorConstants.blackColor,
-                // controller: _newPasswordController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  fillColor: ColorConstants.blackColor,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.hintColor,
-                    ),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: BorderSide(
-                      color: ColorConstants.blackColor,
-                    ),
-                  ),
-                  hintText: 'Phone No',
-                  hintStyle: TextStyle(
-                      fontSize: 14.0,
-                      height: 1,
-                      color: ColorConstants.hintColor),
-                  focusColor: ColorConstants.blackColor,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: const Text("Apply"),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Column buildDetailedWidget(BuildContext context, String title, content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge!
+              .copyWith(fontWeight: FontWeight.bold),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Text(
+            content,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      ],
     );
   }
 }
