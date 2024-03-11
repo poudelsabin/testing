@@ -1,8 +1,14 @@
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppPreference {
-  final SharedPreferences _sharedPreferences;
-  AppPreference(this._sharedPreferences);
+  late SharedPreferences _sharedPreferences;
+  AppPreference() {
+    init();
+  }
+  init() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+  }
 
   Future<String?> getAccessToken() async {
     String? accessToken = _sharedPreferences.getString("accessToken");
